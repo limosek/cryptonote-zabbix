@@ -14,10 +14,10 @@ zserver = "localhost"
 zport = 10051
 zhost = "itnsd"
 
-def getlastblockheader(burl):
+def json_daemon_call(burl, method):
     d = {
         "id": "0",
-        "method": "getlastblockheader",
+        "method": method,
         "jsonrpc": "2.0"
     }
     r = requests.post(burl, data=json.dumps(d), headers={"Content-Type": "application/json"})
@@ -49,21 +49,24 @@ def main(argv):
         elif opt in ("--zhost"):
             zhost = arg
 
-    response = json.loads(getlastblockheader(burl))
+    getlastblockheader = json.loads(json_daemon_call(burl, "getlastblockheader"))
+    get_transaction_pool_stats = json.loads(json_daemon_call(burl, "get_transaction_pool_stats"))
     last_height=0
-    while (response):
-        if (response['result']['block_header']['height']!=last_height):
-            if (time.time()-response['result']['block_header']['timestamp']>3600):
-                timestamp=response['result']['block_header']['timestamp']
+    while (getlastblockheader):
+        if (getlastblockheader['result']['block_header']['height']!=last_height):
+            if (time.time()-getlastblockheader['result']['block_header']['timestamp']>3600):
+                timestamp=getlastblockheader['result']['block_header']['timestamp']
             else:
                 timestamp=time.time()
-            zsend('itns.bc_height', response['result']['block_header']['height'], timestamp)
-            zsend('itns.bc_difficulty', response['result']['block_header']['difficulty'], timestamp)
-            zsend('itns.bc_size', response['result']['block_header']['block_size'], timestamp)
-            zsend('itns.bc_timestamp', response['result']['block_header']['timestamp'], timestamp)
+            zsend('itns.bc_height', getlastblockheader['result']['block_header']['height'], timestamp)
+            zsend('itns.bc_difficulty', getlastblockheader['result']['block_header']['difficulty'], timestamp)
+            zsend('itns.bc_size', getlastblockheader['result']['block_header']['block_size'], timestamp)
+            zsend('itns.bc_timestamp', getlastblockheader['result']['block_header']['timestamp'], timestamp)
+            zsend('itns.tp_total', get_transaction_pool_stats['result']['pool_stats']['bytes_total'], timestamp)
         time.sleep(1)
-        last_height=response['result']['block_header']['height']
-        response = json.loads(getlastblockheader(burl))
+        last_height=getlastblockheader['result']['block_header']['height']
+        getlastblockheader = json.loads(json_daemon_call(burl, "getlastblockheader"))
+        get_transaction_pool_stats = json.loads(json_daemon_call(burl, "get_transaction_pool_stats"))
 
 if __name__ == "__main__":
     main(sys.argv[1:])
