@@ -15,14 +15,15 @@ zport = 10051
 zhost = "itnsd"
 
 def json_daemon_call(burl, method):
-    d = {
-        "id": "0",
-        "method": method,
-        "jsonrpc": "2.0"
-    }
     if (method != ""):
-      burl = burl + "/json_rpc"
-    r = requests.post(burl, data=json.dumps(d), headers={"Content-Type": "application/json"})
+			d = {
+					"id": "0",
+					"method": method,
+					"jsonrpc": "2.0"
+			}
+			r = requests.post(burl + "/json_rpc", data=json.dumps(d), headers={"Content-Type": "application/json"})
+		else:
+			r = requests.post(burl, data="", headers={"Content-Type": "application/json"})
     if (r.status_code==200):
         return(r.text)
     else:
