@@ -20,7 +20,7 @@ def json_daemon_call(burl, method):
         "method": method,
         "jsonrpc": "2.0"
     }
-    if (method != "")
+    if (method != ""):
       burl = burl + "/json_rpc"
     r = requests.post(burl, data=json.dumps(d), headers={"Content-Type": "application/json"})
     if (r.status_code==200):
