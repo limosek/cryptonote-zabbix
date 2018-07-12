@@ -9,7 +9,7 @@ import requests
 import sys
 import time
 
-burl = "http://127.0.0.1:48782/json_rpc"
+burl = "http://127.0.0.1:48782"
 zserver = "localhost"
 zport = 10051
 zhost = "itnsd"
@@ -20,6 +20,8 @@ def json_daemon_call(burl, method):
         "method": method,
         "jsonrpc": "2.0"
     }
+    if (method != "")
+      burl = burl + "/json_rpc"
     r = requests.post(burl, data=json.dumps(d), headers={"Content-Type": "application/json"})
     if (r.status_code==200):
         return(r.text)
@@ -50,7 +52,7 @@ def main(argv):
             zhost = arg
 
     getlastblockheader = json.loads(json_daemon_call(burl, "getlastblockheader"))
-    get_transaction_pool_stats = json.loads(json_daemon_call(burl, "get_transaction_pool_stats"))
+    get_transaction_pool_stats = json.loads(json_daemon_call(burl + "/get_transaction_pool_stats", ""))
     last_height=0
     while (getlastblockheader):
         if (getlastblockheader['result']['block_header']['height']!=last_height):
@@ -66,7 +68,7 @@ def main(argv):
         time.sleep(1)
         last_height=getlastblockheader['result']['block_header']['height']
         getlastblockheader = json.loads(json_daemon_call(burl, "getlastblockheader"))
-        get_transaction_pool_stats = json.loads(json_daemon_call(burl, "get_transaction_pool_stats"))
+        get_transaction_pool_stats = json.loads(json_daemon_call(burl + "/get_transaction_pool_stats", ""))
 
 if __name__ == "__main__":
     main(sys.argv[1:])
