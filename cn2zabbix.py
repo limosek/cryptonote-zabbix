@@ -86,6 +86,7 @@ def main(argv):
         if (get_transaction_pool_stats['pool_stats']['bytes_total'] != last_tp_size):
             logging.warning("Change in tp_size (%s => %s)" % (last_tp_size, get_transaction_pool_stats['pool_stats']['bytes_total']))
             zsend(cfg.currency + '.tp_total', get_transaction_pool_stats['pool_stats']['bytes_total'], time.time())
+            zsend(cfg.currency + '.tp_num', get_transaction_pool_stats['pool_stats']['txs_total'], time.time())
         else:
             logging.warning("Same tp_size %s" % (last_tp_size))
 
