@@ -1,7 +1,4 @@
-socket
-time
 logging
 pprint
-json
 configargparse
 requests

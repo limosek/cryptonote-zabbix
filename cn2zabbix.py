@@ -37,6 +37,7 @@ def zsend(key, value, timestamp):
     line = '"%s" "%s" "%s" "%s"' % (cfg.zhost, key, round(timestamp), value)
     logging.debug("Sending data to zabbix: " + line)
     print(line)
+    sys.stdout.flush()
 
 def main(argv):
     global cfg

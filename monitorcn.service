@@ -1,0 +1,16 @@
+
+[Unit]
+Description=Cryptonote zabbix monitoring script
+ConditionPathExists=/usr/local/bin/monitorcn.sh
+After=syslog.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/monitorcn.sh
+User=zabbix
+Restart=always
+StandardOutput=syslog
+StandardError=syslog
+
+[Install]
+WantedBy=multi-user.target
