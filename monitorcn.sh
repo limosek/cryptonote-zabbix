@@ -7,10 +7,14 @@ if [ -z "$CNONE" ] && [ -d /etc/cn2zabbix ] && [ -n "/etc/cn2zabbix/*conf" ];  t
     (
       export CNONE=1
       LOCKFILE=/tmp/monitorcn_$(basename $conf .conf).pid
+      LOGFILE=/tmp/monitorcn_$(basename $conf .conf).log
       . $conf
-      export ZABBIX_SERVER ZABBIX_PORT ZABBIX_SENDER LOCKFILE CN2ZOPTS DAEMON_RPC ZABBIX_HOST
+      export ZABBIX_SERVER ZABBIX_PORT ZABBIX_SENDER LOCKFILE CN2ZOPTS DAEMON_RPC ZABBIX_HOST LOGFILE
       $0 $@
+      sleep 0.1
     ) &
+    sleep 0.1
+    echo
   done
   exit
 fi
@@ -22,6 +26,7 @@ fi
 [ -n "$ZABBIX_HOST" ] && ZABBIX_HOST="-H $ZABBIX_HOST"
 [ -n "$DAEMON_RPC" ] && DAEMON_RPC="-D $DAEMON_RPC"
 [ -z "$LOCKFILE" ] && LOCKFILE=/tmp/monitorbc.pid
+[ -z "$LOGFILE" ] && LOCKFILE=/tmp/monitorbc.log
 [ -z "$CN2ZOPTS" ] && CN2ZOPTS="$DAEMON_RPC $ZABBIX_HOST"
 
 start() {
@@ -34,7 +39,7 @@ start() {
   else
     echo "Daemon is already runing? Please cleanup $LOCKFILE and try again"
     exit 2
-  fi
+  fi >$LOGFILE 2>&1
 }
 
 stop() {

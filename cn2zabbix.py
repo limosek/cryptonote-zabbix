@@ -43,7 +43,7 @@ def main(argv):
     global cfg
     
     p = configargparse.getArgumentParser()
-    p.add('-f', '--config', metavar='CONFIGFILE', required=None, is_config_file=True, default=os.path.abspath(os.path.join(os.path.dirname(__file__))) + '/cn2zabbix.ini', help='Config file')
+    p.add('-f', '--config', metavar='CONFIGFILE', required=None, is_config_file=True, help='Config file')
     p.add('-h', '--help', metavar='HELP', required=None, action='store_const', dest='h', const='h', help='Help')
     p.add('-d', '--debug', dest='d', metavar='LEVEL', help='Debug level', default='ERROR')
     p.add('-c', '--currency', dest='currency', metavar='CURRENCY', required=None, help='Currency prefix', default='itns')
