@@ -10,7 +10,7 @@ if [ -z "$CNONE" ] && [ -d /etc/cn2zabbix ] && [ -n "/etc/cn2zabbix/*conf" ];  t
       . $conf
       export ZABBIX_SERVER ZABBIX_PORT ZABBIX_SENDER LOCKFILE CN2ZOPTS DAEMON_RPC ZABBIX_HOST
       $0 $@
-    )
+    ) &
   done
   exit
 fi

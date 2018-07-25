@@ -8,7 +8,7 @@ install:
 	sudo cp cn2zabbix.py /usr/local/bin/
 	pip install -r requirements.txt
 	sudo mkdir -p /etc/cn2zabbix/
-	sudo cp monitorcn.service /etc/systemd/user/
+	sudo cp monitorcn.service /etc/systemd/system/
 	sudo systemctl daemon-reload
 	
 	
