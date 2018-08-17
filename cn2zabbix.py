@@ -65,19 +65,25 @@ def main(argv):
 
     last_height = 0
     last_tp_size = -1
+    last_time = 0
+    
     while (getlastblockheader):
-        if (getlastblockheader['result']['block_header']['height'] != last_height):
-            logging.warning("Change in height (%s => %s)" % (last_height, getlastblockheader['result']['block_header']['height']))
-            if (time.time()-getlastblockheader['result']['block_header']['timestamp'] > 3600):
+        cur_time = time.time()
+        height_changed = (getlastblockheader['result']['block_header']['height'] != last_height)
+        if (height_changed or cur_time > last_time + 60*5):
+            last_time = cur_time
+            if (height_changed):
+                logging.warning("Change in height (%s => %s)" % (last_height, getlastblockheader['result']['block_header']['height']))
+            else:
+                logging.warning("Same height %s" % (last_height))
+            if (cur_time - getlastblockheader['result']['block_header']['timestamp'] > 3600):
                 timestamp = getlastblockheader['result']['block_header']['timestamp']
             else:
-                timestamp = time.time()
+                timestamp = cur_time
             zsend(cfg.currency + '.bc_height', getlastblockheader['result']['block_header']['height'], timestamp)
             zsend(cfg.currency + '.bc_difficulty', getlastblockheader['result']['block_header']['difficulty'], timestamp)
             zsend(cfg.currency + '.bc_size', getlastblockheader['result']['block_header']['block_size'], timestamp)
             zsend(cfg.currency + '.bc_timestamp', getlastblockheader['result']['block_header']['timestamp'], timestamp)
-        else:
-            logging.warning("Same height %s" % (last_height))
 
         i1 = get_transaction_pool_stats_tmp.find('"histo"')
         if (i1 != -1):
@@ -86,8 +92,8 @@ def main(argv):
         get_transaction_pool_stats = json.loads(get_transaction_pool_stats_tmp)
         if (get_transaction_pool_stats['pool_stats']['bytes_total'] != last_tp_size):
             logging.warning("Change in tp_size (%s => %s)" % (last_tp_size, get_transaction_pool_stats['pool_stats']['bytes_total']))
-            zsend(cfg.currency + '.tp_total', get_transaction_pool_stats['pool_stats']['bytes_total'], time.time())
-            zsend(cfg.currency + '.tp_num', get_transaction_pool_stats['pool_stats']['txs_total'], time.time())
+            zsend(cfg.currency + '.tp_total', get_transaction_pool_stats['pool_stats']['bytes_total'], cur_time)
+            zsend(cfg.currency + '.tp_num', get_transaction_pool_stats['pool_stats']['txs_total'], cur_time)
         else:
             logging.warning("Same tp_size %s" % (last_tp_size))
 
