@@ -50,7 +50,7 @@ def main(argv):
     p.add('-c', '--currency', dest='currency', metavar='CURRENCY', required=None, help='Currency prefix', default='itns')
     p.add('-D', '--daemon-url', dest='burl', metavar='URL', required=None, help='Daemon url', default='http://127.0.0.1:48782')
     p.add('-H', '--zabbix-host', dest='zhost', metavar='HOSTNAME', required=None, help='Zabbix hostname for this daemon', default=socket.gethostname())
-    p.add('-W', '--wait-time', dest='wait', metavar='S', required=None, help='Wait seconds between queries', default=3)
+    p.add('-W', '--wait-time', dest='wait', metavar='S', required=None, help='Wait seconds between queries', default=5)
 
     Log = logging.getLogger()
     cfg = p.parse_args()
