@@ -13,12 +13,13 @@ import time
 
 cfg = {}
 
-def json_daemon_call(burl, method):
+def json_daemon_call(burl, method, params):
     if (method != ""):
         d = {
             "id": "0",
             "method": method,
-            "jsonrpc": "2.0"
+            "jsonrpc": "2.0",
+            "params": params
         }
         url = burl + "/json_rpc"
         logging.warning("Calling RPC " + url)
@@ -41,7 +42,7 @@ def zsend(key, value, timestamp):
 
 def main(argv):
     global cfg
-    
+
     p = configargparse.getArgumentParser()
     p.add('-f', '--config', metavar='CONFIGFILE', required=None, is_config_file=True, help='Config file')
     p.add('-h', '--help', metavar='HELP', required=None, action='store_const', dest='h', const='h', help='Help')
@@ -49,41 +50,54 @@ def main(argv):
     p.add('-c', '--currency', dest='currency', metavar='CURRENCY', required=None, help='Currency prefix', default='itns')
     p.add('-D', '--daemon-url', dest='burl', metavar='URL', required=None, help='Daemon url', default='http://127.0.0.1:48782')
     p.add('-H', '--zabbix-host', dest='zhost', metavar='HOSTNAME', required=None, help='Zabbix hostname for this daemon', default=socket.gethostname())
-    p.add('-W', '--wait-time', dest='wait', metavar='S', required=None, help='Wait seconds between queries', default=3)
-    
+    p.add('-W', '--wait-time', dest='wait', metavar='S', required=None, help='Wait seconds between queries', default=5)
+
     Log = logging.getLogger()
-    cfg = p.parse_args()  
+    cfg = p.parse_args()
     Log.setLevel(cfg.d)
-        
+
     if (cfg.h):
         print(p.format_help())
-        print(p.format_values()) 
+        print(p.format_values())
         sys.exit()
-    
-    getlastblockheader = json.loads(json_daemon_call(cfg.burl, "getlastblockheader"))
-    get_transaction_pool_stats_tmp = json_daemon_call(cfg.burl + "/get_transaction_pool_stats", "")
+
+    getlastblockheader = json.loads(json_daemon_call(cfg.burl, "getlastblockheader", {}))
+    get_transaction_pool_stats_tmp = json_daemon_call(cfg.burl + "/get_transaction_pool_stats", "", {})
 
     last_height = 0
     last_tp_size = -1
     last_time = 0
-    
+
     while (getlastblockheader):
         cur_time = time.time()
-        height_changed = (getlastblockheader['result']['block_header']['height'] != last_height)
+        cur_height = getlastblockheader['result']['block_header']['height']
+        height_changed = (cur_height != last_height)
+
         if (height_changed or cur_time > last_time + 60*5):
             last_time = cur_time
+            getblockheadersrange = {}
+
             if (height_changed):
-                logging.warning("Change in height (%s => %s)" % (last_height, getlastblockheader['result']['block_header']['height']))
+                if (last_height > 0 and cur_height - last_height > 1):
+                  getblockheadersrange = json.loads(json_daemon_call(cfg.burl, "getblockheadersrange", { "start_height": last_height + 1, "end_height": cur_height - 1 }))
+                logging.warning("Change in height (%s => %s)" % (last_height, cur_height))
             else:
                 logging.warning("Same height %s" % (last_height))
-            if (cur_time - getlastblockheader['result']['block_header']['timestamp'] > 3600):
-                timestamp = getlastblockheader['result']['block_header']['timestamp']
-            else:
-                timestamp = cur_time
-            zsend(cfg.currency + '.bc_height', getlastblockheader['result']['block_header']['height'], timestamp)
-            zsend(cfg.currency + '.bc_difficulty', getlastblockheader['result']['block_header']['difficulty'], timestamp)
-            zsend(cfg.currency + '.bc_size', getlastblockheader['result']['block_header']['block_size'], timestamp)
-            zsend(cfg.currency + '.bc_timestamp', getlastblockheader['result']['block_header']['timestamp'], timestamp)
+
+            blocks = []
+            if ("result" in getblockheadersrange):
+              blocks.extend(getblockheadersrange['result']['headers'])
+            blocks.append(getlastblockheader['result']['block_header'])
+
+            for block in blocks:
+              if (cur_time - block['timestamp'] > 3600):
+                  timestamp = block['timestamp']
+              else:
+                  timestamp = cur_time
+              zsend(cfg.currency + '.bc_height', block["height"], timestamp)
+              zsend(cfg.currency + '.bc_difficulty', block['difficulty'], timestamp)
+              zsend(cfg.currency + '.bc_size', block['block_size'], timestamp)
+              zsend(cfg.currency + '.bc_timestamp', block['timestamp'], timestamp)
 
         i1 = get_transaction_pool_stats_tmp.find('"histo"')
         if (i1 != -1):
@@ -98,10 +112,10 @@ def main(argv):
             logging.warning("Same tp_size %s" % (last_tp_size))
 
         time.sleep(cfg.wait)
-        last_height = getlastblockheader['result']['block_header']['height']
+        last_height = cur_height
         last_tp_size = get_transaction_pool_stats['pool_stats']['bytes_total']
-        getlastblockheader = json.loads(json_daemon_call(cfg.burl, "getlastblockheader"))
-        get_transaction_pool_stats_tmp = json_daemon_call(cfg.burl + "/get_transaction_pool_stats", "")
+        getlastblockheader = json.loads(json_daemon_call(cfg.burl, "getlastblockheader", {}))
+        get_transaction_pool_stats_tmp = json_daemon_call(cfg.burl + "/get_transaction_pool_stats", "", {})
 
 if __name__ == "__main__":
     main(sys.argv[1:])
